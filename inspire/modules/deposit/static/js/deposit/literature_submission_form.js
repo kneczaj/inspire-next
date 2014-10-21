@@ -189,6 +189,15 @@ define(function(require, exports, module) {
             ),
             cannotFindMessage: 'Cannot find this conference in our database.'
           })[0];
+          // for spinner at conferences typeahead
+          $frontendField.on('typeahead:asyncrequest', function() {
+            this.addClass('ui-autocomplete-loading');
+          });
+          $frontendField.on('typeahead:asynccancel typeahead:asyncreceive',
+            function() {
+              this.removeClass('ui-autocomplete-loading');
+            }
+          );
         }.bind(this),
         synchronizationFn: function($originalField, $frontendField) {
           $originalField.val(
