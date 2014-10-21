@@ -30,6 +30,7 @@ define(function(require, exports, module) {
   var TaskManager = require("js/deposit/task_manager");
   var ConferencesTypeahead = require("js/deposit/conferences_typeahead");
   var PreviewModal = require("js/deposit/modal_preview");
+  var SynchronizedField = require("js/deposit/synchronized_field");
   require("js/deposit/message_box");
   require("js/deposit/fields_group");
   require('ui/effect-highlight');
@@ -106,19 +107,12 @@ define(function(require, exports, module) {
     this.$importButton = $("#importData");
     this.$skipButton = $("#skipImportData");
     this.$submissionForm = $('#submitForm');
-    this.$conference = $('#conf_name');
-    this.$conferenceId = $('#conference_id');
+    this.$conference = $('#conference_id');
     this.$previewModal = $('#modalData');
     this.$nonpublic_note = $("#nonpublic_note");
     this.$form = $("#webdeposit_form_accordion");
     this.$formWrapper = $('.form-wrapper');
     this.$inputs = this.$formWrapper.find(':input');
-
-    // these fields' values will be deleted before submission so that they will not be
-    // sent to the sever
-    this.$fieldsExcludedFromSubmision = [
-      this.$conference
-    ];
 
     this.$importIdsFields = $('form:first .panel:eq(0) *:input[type=text]');
 
@@ -173,25 +167,38 @@ define(function(require, exports, module) {
         hoganTemplate: tpl_flash_message,
       })[0];
 
-      this.$conference.conferencesTypeahead({
-        suggestionTemplate: Hogan.compile(
-          '<b>{{ title }}</b><br>' +
-          '<small>' +
-          '{{ date }}, {{ place }}<br>' +
-          '{{ conference_id }}' +
-          '</small>'
-        ),
-
-        selectedValueTemplate: Hogan.compile(
-          '{{ conference_id }}, {{ title }}, {{ date }}, {{ place }}'
-        ),
-
-        cannotFindMessage: 'Cannot find this conference in our database.'
-      });
-
       this.previewModal = new PreviewModal(this.$previewModal, {
         labels: this.getLabels(),
         ignoredFields: this.getHiddenFields()
+      });
+
+      this.$conference.synchronizedField({
+        synchronizationEvents: 'typeahead:selected change blur',
+        propagatedEvents: 'typeahead:selected change blur',
+        initializationFn: function($frontendField) {
+          this.conferences = $frontendField.conferencesTypeahead({
+            suggestionTemplate: Hogan.compile(
+              '<b>{{ title }}</b><br>' +
+              '<small>' +
+              '{{ date }}, {{ place }}<br>' +
+              '{{ conference_id }}' +
+              '</small>'
+            ),
+            selectedValueTemplate: Hogan.compile(
+              '{{ conference_id }}, {{ title }}, {{ date }}, {{ place }}'
+            ),
+            cannotFindMessage: 'Cannot find this conference in our database.'
+          })[0];
+        }.bind(this),
+        synchronizationFn: function($originalField, $frontendField) {
+          $originalField.val(
+            $frontendField.data('conferences-typeahead').getRawValue());
+          $originalField.trigger('change');
+        },
+        reverseSynchronizationFn: function($originalField, $frontendField) {
+          $frontendField.data('conferences-typeahead')
+            .initFromRawValue($originalField.val(), 0);
+        }
       });
     },
 
@@ -223,11 +230,6 @@ define(function(require, exports, module) {
 
       this.$skipButton.click(function(event) {
         that.showForm();
-      });
-
-      this.$submissionForm.on('submit', function(event) {
-        that.$conferenceId.val(ConferencesTypeahead.getRawValue());
-        that.deleteIgnoredValues();
       });
     },
 

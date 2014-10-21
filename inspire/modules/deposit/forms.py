@@ -328,17 +328,11 @@ class LiteratureForm(WebDepositForm):
         choices=languages
     )
 
-    conf_name = fields.TextField(
+    conference_id = fields.TextField(
         placeholder=_("Start typing for suggestions"),
         label=_('Conference Information'),
         description=_('Conference name, acronym, place, date'),
         widget_classes="form-control"
-    )
-
-    conference_id = fields.TextField(
-        export_key='conference_id',
-        widget_classes="hidden",
-        widget=HiddenInput(),
     )
 
     license_url = fields.TextField(
