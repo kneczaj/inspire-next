@@ -51,13 +51,14 @@ define(function(require, exports, module) {
         datumTokenizer: function(datum) {
           return that.datumTokenizer.call(that, datum);
         },
-        queryTokenizer: Bloodhound.tokenizers.whitespace
+        queryTokenizer: Bloodhound.tokenizers.whitespace,
+        limit: 100,
       });
 
       engine.initialize();
 
       this.$element.typeahead({
-        minLength: 1
+        minLength: this.options.minLength
       }, {
         source: engine.ttAdapter(),
         // the key of a value which is rather passed to typeahead than displayed
@@ -235,6 +236,11 @@ define(function(require, exports, module) {
        * @param {String} a message shown when no suggestion is available
        */
       cannotFindMessage: undefined,
+      /**
+       * @type Integer number of characters after which suggestions start to
+       *  be fetched
+       */
+      minLength: 3,
     };
 
   module.exports = ConferencesTypeahead;
