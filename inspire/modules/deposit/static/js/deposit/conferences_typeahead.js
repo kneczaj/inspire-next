@@ -48,7 +48,7 @@ define(function(require, exports, module) {
 
       this.engine = new Bloodhound({
         name: 'conferences',
-        remote: '/search?cc=Conferences&p=%QUERY*&of=recjson&f=conferences',
+        remote: '/search?cc=Conferences&p=%QUERY*&of=recjson',
         datumTokenizer: function(datum) {
           return that.datumTokenizer.call(that, datum);
         },
