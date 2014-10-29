@@ -66,6 +66,7 @@ EXTENSIONS = [
     'invenio.modules.deposit.url_converters',
     'inspire.ext.search_bar',
     'inspire.ext.formatter_jinja_filters',
+    'invenio.ext.jasmine',
 ]
 
 PACKAGES = [
