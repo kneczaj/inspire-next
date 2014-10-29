@@ -44,7 +44,7 @@ def isbn_syntax_validation(form, field):
         raise StopValidation(message)
 
 
-def does_exist_in_inspirehep(query):
+def does_exist_in_inspirehep(query, collection):
     """Check if there exist an item in the db which satisfies query.
 
     :param query: http query to check
@@ -52,10 +52,16 @@ def does_exist_in_inspirehep(query):
     import requests
     from json import loads
 
-    json_reply = requests.get("http://inspirehep.net/search?", params={
+    params = {
         'p': query,
         'of': 'recjson'
-    }).text
+    }
+
+    if collection:
+        params['cc'] = collection
+
+    json_reply = requests.get(
+        "http://inspirehep.net/search?", params=params).text
 
     # empty answer means that the item does not exist in the db.
     if not len(json_reply):
@@ -106,3 +112,15 @@ def duplicated_arxiv_id_validator(form, field):
     if cfg.get('PRODUCTION_MODE'):
         inspirehep_duplicated_validator(
             '035__a:oai:arXiv.org:' + arxiv_id, 'arXiv ID')
+
+
+def existing_conference_validator(form, field):
+    """Check if the conference id does exist in the db.
+
+    For now cooperates with inspirehep.net db.
+    """
+    conference_id = field.data
+    if not conference_id:
+        return
+    if not does_exist_in_inspirehep('111__g:' + conference_id, 'Conferences'):
+        raise ValidationError('There is not such a conference in our database.')

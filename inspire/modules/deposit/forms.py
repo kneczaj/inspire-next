@@ -39,7 +39,8 @@ from .fields import ArXivField
 from .validators.dynamic_fields import AuthorsValidation
 from .filters import clean_empty_list
 from .validators.simple_fields import duplicated_doi_validator, \
-    duplicated_arxiv_id_validator, arxiv_syntax_validation
+    duplicated_arxiv_id_validator, arxiv_syntax_validation, \
+    existing_conference_validator
 
 #
 # Field class names
@@ -332,7 +333,8 @@ class LiteratureForm(WebDepositForm):
         placeholder=_("Start typing for suggestions"),
         label=_('Conference Information'),
         description=_('Conference name, acronym, place, date'),
-        widget_classes="form-control"
+        widget_classes="form-control",
+        validators=[existing_conference_validator]
     )
 
     license_url = fields.TextField(
