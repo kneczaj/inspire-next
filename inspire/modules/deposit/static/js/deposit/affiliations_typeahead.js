@@ -62,10 +62,10 @@ define([
   function affiliationsTypeahead($element) {
     $element.extendedTypeahead({
       suggestionTemplate: Hogan.compile(
-        '<b>{{ name }}</b><br>' +
+        '<b>{{ affiliation }}</b><br>' +
         '<small>' +
-        'deparment: {{ deparment }}<br>' +
-        '{{ affiliation }}' +
+        '{{#department}}Department: {{ department }}<br>{{/department}}' +
+        '{{#name}}{{ name }}{{/name}}' +
         '</small>'
       ),
       selectedValueTemplate: Hogan.compile(
