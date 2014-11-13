@@ -259,7 +259,7 @@ define(function(require, exports, module) {
       /**
        * @param {Hogan template} a template used to render a the descriptive field value
        */
-      selectedValueTemplate: {},
+      selectedValueTemplate: null,
       /**
        * @param {String} a message shown when no suggestion is available
        */
