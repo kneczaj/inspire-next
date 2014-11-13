@@ -21,8 +21,9 @@
  */
 
 define([
-  'js/deposit/extended_typeahead'
-], function(ExtendedTypeahead) {
+  'jquery',
+  'js/jquery_plugin',
+], function($, jQueryPlugin) {
 
   /**
    * Removes non alpha-numeric characters from beginning and end of a string.
@@ -43,11 +44,10 @@ define([
    *   for every token connected with OR operator
    */
   function datumTokenizer(datum) {
-    if ((typeof datum) === 'string' || !datum.institution) {
+    if ((typeof datum) === 'string') {
       return [datum];
     }
     var tokens = [];
-    datum = datum.institution;
     if (datum.name && (typeof datum.name) === 'string') {
       var titleNameTokens = datum.name.split(/\s+/);
       titleNameTokens = $.map(titleNameTokens, _trimNonAlphaNumericChar);
@@ -59,33 +59,68 @@ define([
     return tokens;
   }
 
-  function affiliationsTypeahead($element) {
-    $element.extendedTypeahead({
-      suggestionTemplate: Hogan.compile(
-        '<b>{{ affiliation }}</b><br>' +
-        '<small>' +
-        '{{#department}}Department: {{ department }}<br>{{/department}}' +
-        '{{#name}}{{ name }}{{/name}}' +
-        '</small>'
-      ),
-      selectedValueTemplate: Hogan.compile(
-        '{{ affiliation }}'
-      ),
-      cannotFindMessage: 'Cannot find this affiliation in our database.',
-      dataKey: 'institution',
-      dataEngine: new Bloodhound({
-        name: 'affiliations',
-        remote: '/search?cc=Institutions&p=%QUERY*&of=recjson&f=affautocomplete',
-        datumTokenizer: function(datum) {
-          return datumTokenizer.call(this, datum);
+  function AffiliationsTypeahead($element) {
+
+    this.dataEngine = new Bloodhound({
+      name: 'affiliations',
+      remote: {
+        url: '/search?cc=Institutions&p=%QUERY*&of=recjson&f=affautocomplete',
+        // replace: function(url, query) {
+        //   return url.replace('%QUERY', query);
+        // },
+        filter: function(response) {
+          return $.map(response, function(item, idx) {
+            return item.institution;
+          });
+        }
+      },
+      datumTokenizer: datumTokenizer,
+      queryTokenizer: Bloodhound.tokenizers.whitespace,
+      limit: 100,
+    });
+
+    this.dataEngine.initialize();
+    this.$element = $element;
+
+    var suggestionTemplate = Hogan.compile(
+      '<b>{{ affiliation }}</b><br>' +
+      '<small>' +
+      '{{#department}}Department: {{ department }}<br>{{/department}}' +
+      '{{#name}}{{ name }}{{/name}}' +
+      '</small>'
+    );
+
+    this.$element.typeahead({
+      minLength: 3
+    }, {
+      // after typeahead upgrade to 0.11 can be substituted with:
+      // source: this.engine.ttAdapter(),
+      // https://github.com/twitter/typeahead.js/issues/166
+      source: function(query, callback) {
+        // trigger can be deleted after typeahead upgrade to 0.11
+        this.$element.trigger('typeahead:asyncrequest');
+        this.dataEngine.get(query, function(suggestions) {
+          this.$element.trigger('typeahead:asyncreceive');
+          callback(suggestions);
+        }.bind(this));
+      }.bind(this),
+      // the key of a value which is rather passed to typeahead than displayed
+      // the display values are selected by templates.
+      displayKey: 'affiliation',
+      templates: {
+        empty: function(data) {
+          return 'Cannot find this affiliation in our database.';
         },
-        queryTokenizer: Bloodhound.tokenizers.whitespace,
-        limit: 100,
-      })
+        suggestion: function(data) {
+          return suggestionTemplate.render.call(suggestionTemplate, data);
+        }.bind(this)
+      }
     });
 
     return $element;
   }
 
-  return affiliationsTypeahead;
+  $.fn.affiliationsTypeahead = jQueryPlugin(AffiliationsTypeahead, 'affiliation-typeahead');
+
+  return AffiliationsTypeahead;
 });

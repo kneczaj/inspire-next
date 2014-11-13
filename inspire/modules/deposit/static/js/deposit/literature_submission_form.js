@@ -29,7 +29,7 @@ define(function(require, exports, module) {
   var DataMapper = require("js/deposit/mapper");
   var TaskManager = require("js/deposit/task_manager");
   var conferencesTypeahead = require("js/deposit/conferences_typeahead");
-  var affiliationsTypeahead = require("js/deposit/affiliations_typeahead");
+  var AffiliationsTypeahead = require("js/deposit/affiliations_typeahead");
   var PreviewModal = require("js/deposit/modal_preview");
   var SynchronizedField = require("js/deposit/synchronized_field");
   require("js/deposit/message_box");
@@ -236,9 +236,9 @@ define(function(require, exports, module) {
 
       this.$submissionForm.on("form:init-autocomplete", function(ev, data) {
         if (data.item.id.indexOf("affiliation") != -1) {
-          affiliationsTypeahead($(data.item));
+          $(data.item).affiliationsTypeahead();
         }
-      });
+      }.bind(this));
 
       // for spinner at conferences typeahead
       this.$conference.on('typeahead:asyncrequest', function() {
